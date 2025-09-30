@@ -1,0 +1,21 @@
+services:
+  oltp_postgres:
+    image: postgres:16
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=OLTP_USER
+      - POSTGRES_PASSWORD=OLTP_PASSWORD
+      - POSTGRES_DB=OLTP_DB
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./data/coinbase_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U OLTP_USER -d OLTP_DB"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  postgres_data:
