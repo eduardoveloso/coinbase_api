@@ -1,21 +1,33 @@
 services:
   oltp_postgres:
     image: postgres:16
-    env_file:
-      - .env
     environment:
-      - POSTGRES_USER=OLTP_USER
-      - POSTGRES_PASSWORD=OLTP_PASSWORD
-      - POSTGRES_DB=OLTP_DB
+      POSTGRES_USER: ${OLTP_USER}
+      POSTGRES_PASSWORD: ${OLTP_PASSWORD}
+      POSTGRES_DB: ${OLTP_DB}
     ports:
-      - "5433:5432"
+      - "5433:5432"     # host:container
     volumes:
-      - ./data/coinbase_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U OLTP_USER -d OLTP_DB"]
-      interval: 20s
-      timeout: 10s
-      retries: 5
+      - olt_postgres_data:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d
+    networks:
+      - airflow_network
+
+  scheduler:
+    depends_on:
+      - oltp_postgres
+    networks:
+      - airflow_network
+
+  webserver:
+    depends_on:
+      - oltp_postgres
+    networks:
+      - airflow_network
 
 volumes:
-  postgres_data:
+  olt_postgres_data:
+
+networks:
+  airflow_network:
+    driver: bridge
